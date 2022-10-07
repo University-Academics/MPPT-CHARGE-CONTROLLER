@@ -5,9 +5,9 @@
 #define SLIDE 32   // Change between Menu Options
 #define CHANGE 35  // Change the Value
 #define SELECT 18
-#define INDICATOR_LED 3
-#define BUCK_IN 4
-#define BUCK_EN 5
+#define INDICATOR_LED 2
+#define BUCK_IN 13
+#define BUCK_EN 14
 #define BRIGHTNESS_CONTROLLER 33
 #define CURRENT_IN 33
 #define CURRENT_OUT 34
@@ -44,10 +44,10 @@ const unsigned short int
   SLIDER_Y = 1,
 
   // PWM PARAMETERS
-  LED_CHANNEL_BRIG = 0,
-  BUCK_PWM_CHANNEL = 2,
-  FREQ1 = 39000,
-  RESOLU1 = 12,
+  LED_CHANNEL_BRIG = 2,
+  BUCK_PWM_CHANNEL = 0,
+  FREQ1 = 37000,
+  RESOLU1 = 8,
 
   FREQ2 = 5000,
   RESOLU2 = 8,
@@ -173,9 +173,9 @@ unsigned short int
   TempBatteryCalib = 0,  // 0: Voltage Calibration, 1: percentage Calibration, 3 : Save Values 4 : Show Values
   calibParamCount = 3,
   ErrorCount = 0,
-  PwmMax = 95,
-  PwmMin = 5,
-  PPWM = 50,
+  PPwmMax = 95,
+  PPwmMin = 20,
+  PPWM = 40,
   PWM = 0;
 
 
@@ -194,12 +194,12 @@ float
   Wh = 0.0000,
   kWh = 0.0000,
   MWh = 0.0000,
-  CinOffsetVoltage = 2.541,
-  CoutOffsetVoltage = 2.541,
-  CinSensitivity = 1.078,
-  CoutSensitivity = 1.078,
-  VinGain = 15.7058,
-  VoutGain = 15.7058;
+  CinOffsetVoltage = 2.5102,
+  CoutOffsetVoltage = 2.5058,
+  CinSensitivity = 0.03000,
+  CoutSensitivity = 0.0300,
+  VinGain = 15.609321,
+  VoutGain = 17.8592297;
 
 
 unsigned long
@@ -237,16 +237,16 @@ void setup() {
   pinMode(VOLTAGE_IN, INPUT);
   pinMode(VOLTAGE_OUT, INPUT);
   pinMode(SELECT, INPUT_PULLUP);
-  
+  pinMode(12,INPUT_PULLUP);
+
   pinMode(INDICATOR_LED, OUTPUT);
-  pinMode(BUCK_IN, OUTPUT);
   pinMode(BUCK_EN, OUTPUT);
 
   //LCD INITIALIZATION
   if (enableLCD == 1) {
     lcd.init();
     lcd.setBacklight(HIGH);
-    set_brightness(BrightnessLevel);
+    // set_brightness(BrightnessLevel);
     // lcd.setCursor(0, 1);
     // lcd.print("MPPT INITIALIZED");
     // lcd.setCursor(0, 2);
@@ -265,15 +265,15 @@ void setup() {
 
   // saved_config(1);
   Serial.begin(BAUD_RATE);
-  Serial.println("> Serial Initialized ... ");
-  BatteryVoltage = 13.5;
-  find_battery_level();
-  Serial.print(BatteryLevel);
+  Serial.print("Serial Monitor Intialized.... !");
+  buck_enable();
+  ChargingMode = DEEP_CHARGING;
 }
 
 
 void loop() {
+  MPPT_CONTROLLER_ALGO();
   CurrentTime = millis();
   // lcd_menu();
-  // complete_measurements();
+  complete_measurements();
 }
