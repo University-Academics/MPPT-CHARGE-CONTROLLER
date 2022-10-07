@@ -11,9 +11,13 @@ void buck_disable() {  //Disable MPPT Buck Converter
   // PWM = 0;
 }
 
-void PWM_constrain() {
-  PWM = constrain(PWM, PwmMin, PwmMax);
+void PPWM_constrain() {
+  PPWM = constrain(PPWM, PPwmMin, PPwmMax);
   return;
+}
+
+int pwm_avalue(int ppwm, int resolution) {
+  return pow(2,resolution) * ppwm / 100;
 }
 
 
@@ -25,19 +29,20 @@ void MPPT_CONTROLLER_ALGO() {
       break;
     case NO_BATTERY:  // NO BATTERY DETECTED STATE
       break;
-    case DEEP_CHARGING:                                                                // MPPT ALGORITHM COME INTO ACTION
-      if (InputPower > PreInputPower && InputVoltage > PreInputVoltage) PWM--;        //  ↑P ↑V ; →MPP  //D--
+    case DEEP_CHARGING:                                                              // MPPT ALGORITHM COME INTO ACTION
+      if (InputPower > PreInputPower && InputVoltage > PreInputVoltage) PWM--;       //  ↑P ↑V ; →MPP  //D--
       else if (InputPower > PreInputPower && InputVoltage < PreInputVoltage) PWM++;  //↑P ↓V ; MPP←  //D++
       else if (InputPower < PreInputPower && InputVoltage > PreInputVoltage) PWM++;  //↓P ↑V ; MPP→  //D++
       else if (InputPower < PreInputPower && InputVoltage < PreInputVoltage) PWM--;  //  ↓P ↓V ; ←MPP  //D--
       else
-        ;  // MPP REACHED
+        PPWM++;  // MPP REACHED
       break;
     case FLOATING:  // KEEPING BATTERY AT MAXIMUM VOLTAGE WITHOUT DAMAGING
       break;
   }
   if (ControllerMode == DEEP_CHARGING || ControllerMode == FLOATING) {
-    PWM_constrain();
+    PPWM_constrain();
+    PWM = pwm_avalue(PPWM,RESOLU1);
     ledcWrite(BUCK_PWM_CHANNEL, PWM);
     buck_enable();
   }

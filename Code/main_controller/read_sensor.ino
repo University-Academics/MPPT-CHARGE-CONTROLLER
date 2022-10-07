@@ -46,7 +46,9 @@ void complete_measurements() {
     OutputCurrent = (CoutOffsetVoltage - avgCountCout * 3.3 / 4096) * CoutSensitivity;
     InputVoltage = avgCountVin * 3.3 * VinGain / 4096;
     BatteryVoltage = avgCountVout * 3.3 * VoutGain / 4096;
-    Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent), Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n");
+    InputPower = InputCurrent * InputVoltage;
+    Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent);
+    Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n\n");
   }
   return;
 }
