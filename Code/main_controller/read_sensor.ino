@@ -22,5 +22,31 @@ bool select_opt() {
 
 
 // void power_measurements() {
-  
+
 // InputCurrent = CurMeaOffset - analogRead(CURRENT_IN);}
+
+
+void complete_measurements() {
+  int avgCount = 150, totalCountCin = 0, totalCountCout = 0, totalCountVin = 0, totalCountVout = 0;
+  float avgCountCin = 0, avgCountCout = 0, avgCountVin = 0, avgCountVout = 0;
+  if (CurrentTime - RoutineStartTime > RoutineMidInterval) {
+    for (int i = 0; i < avgCount; i++) {
+      totalCountCin += analogRead(CURRENT_IN);
+      totalCountCout += analogRead(CURRENT_OUT);
+      totalCountVin += analogRead(VOLTAGE_IN);
+      totalCountVout += analogRead(VOLTAGE_OUT);
+    }
+    RoutineStartTime = CurrentTime;
+    avgCountCin = (float)totalCountCin / avgCount;
+    avgCountCout = (float)totalCountCout / avgCount;
+    avgCountVin = (float)totalCountVin / avgCount;
+    avgCountVout = (float)totalCountVout / avgCount;
+
+    InputCurrent = (CinOffsetVoltage - avgCountCin * 3.3 / 4096) * CinSensitivity;
+    OutputCurrent = (CoutOffsetVoltage - avgCountCout * 3.3 / 4096) * CoutSensitivity;
+    InputVoltage = avgCountVin * 3.3 * VinGain / 4096;
+    BatteryVoltage = avgCountVout * 3.3 * VoutGain / 4096;
+    Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent), Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n");
+  }
+  return;
+}

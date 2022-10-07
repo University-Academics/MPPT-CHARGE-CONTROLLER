@@ -9,10 +9,10 @@
 #define BUCK_IN 4
 #define BUCK_EN 5
 #define BRIGHTNESS_CONTROLLER 33
-#define CURRENT_IN 34
-#define CURRENT_OUT 35
-#define VOLTAGE_IN 36
-#define VOLTAGE_OUT 37
+#define CURRENT_IN 33
+#define CURRENT_OUT 34
+#define VOLTAGE_IN 39
+#define VOLTAGE_OUT 36
 
 const int BAUD_RATE = 115200;
 
@@ -193,7 +193,14 @@ float
   PreInputPower = 0.000,
   Wh = 0.0000,
   kWh = 0.0000,
-  MWh = 0.0000;
+  MWh = 0.0000,
+  CinOffsetVoltage = 2.541,
+  CoutOffsetVoltage = 2.541,
+  CinSensitivity = 1.078,
+  CoutSensitivity = 1.078,
+  VinGain = 15.7058,
+  VoutGain = 15.7058;
+
 
 unsigned long
   PrevLcdBackMillis = 0.0000,  //Time of backlight started
@@ -204,7 +211,9 @@ unsigned long
   BouncingTime = 200,
   BlinkTime = 600,
   FreezeTime = 2000,
-  CurrentTime = 0.0000;
+  CurrentTime = 0.0000,
+  RoutineStartTime = 0.0000,
+  RoutineMidInterval = 500;
 
 float BatteryLevelMatrix[6][2] = { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } };
 
@@ -223,7 +232,12 @@ void setup() {
   // PIN INTIALIZATIONS
   pinMode(CHANGE, INPUT);
   pinMode(SLIDE, INPUT);
+  pinMode(CURRENT_IN, INPUT);
+  pinMode(CURRENT_OUT, INPUT);
+  pinMode(VOLTAGE_IN, INPUT);
+  pinMode(VOLTAGE_OUT, INPUT);
   pinMode(SELECT, INPUT_PULLUP);
+  
   pinMode(INDICATOR_LED, OUTPUT);
   pinMode(BUCK_IN, OUTPUT);
   pinMode(BUCK_EN, OUTPUT);
@@ -254,11 +268,12 @@ void setup() {
   Serial.println("> Serial Initialized ... ");
   BatteryVoltage = 13.5;
   find_battery_level();
-  Serial.println(BatteryLevel);
+  Serial.print(BatteryLevel);
 }
 
 
 void loop() {
-  // CurrentTime = millis();
+  CurrentTime = millis();
   // lcd_menu();
+  // complete_measurements();
 }
