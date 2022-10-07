@@ -26,10 +26,10 @@ void MPPT_CONTROLLER_ALGO() {
     case NO_BATTERY:  // NO BATTERY DETECTED STATE
       break;
     case DEEP_CHARGING:                                                                // MPPT ALGORITHM COME INTO ACTION
-      if (InputPower > PreInputPower && InputVoltage > PrevInputVoltage) PWM--;        //  ↑P ↑V ; →MPP  //D--
-      else if (InputPower > PrevInputPower && InputVoltage < PrevInputVoltage) PWM++;  //↑P ↓V ; MPP←  //D++
-      else if (InputPower < PrevInputPower && InputVoltage > PrevInputVoltage) PWM++;  //↓P ↑V ; MPP→  //D++
-      else if (InputPower < PrevInputPower && InputVoltage < PrevInputVoltage) PWM--;  //  ↓P ↓V ; ←MPP  //D--
+      if (InputPower > PreInputPower && InputVoltage > PreInputVoltage) PWM--;        //  ↑P ↑V ; →MPP  //D--
+      else if (InputPower > PreInputPower && InputVoltage < PreInputVoltage) PWM++;  //↑P ↓V ; MPP←  //D++
+      else if (InputPower < PreInputPower && InputVoltage > PreInputVoltage) PWM++;  //↓P ↑V ; MPP→  //D++
+      else if (InputPower < PreInputPower && InputVoltage < PreInputVoltage) PWM--;  //  ↓P ↓V ; ←MPP  //D--
       else
         ;  // MPP REACHED
       break;
@@ -43,6 +43,6 @@ void MPPT_CONTROLLER_ALGO() {
   }
 
   // STORING PREVIOUS VALUES
-  PrevInputPower = InputPower;
-  PrevInputVoltage = InputVoltage;
+  PreInputPower = InputPower;
+  PreInputVoltage = InputVoltage;
 }

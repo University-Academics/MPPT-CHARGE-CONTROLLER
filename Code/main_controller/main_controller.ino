@@ -50,7 +50,19 @@ const unsigned short int
   RESOLU1 = 12,
 
   FREQ2 = 5000,
-  RESOLU2 = 8;
+  RESOLU2 = 8,
+
+  // BACK_LIGHT SLEEP MODE
+  NEVER = 0,
+  SEC_10 = 1,
+  MIN_5 = 2,
+  HOUR_1 = 3,
+  HOUR_6 = 4,
+  HOUR_12 = 5,
+  DAY_1 = 6,
+  DAY_3 = 7,
+  WEEK_1 = 8,
+  MONTH_1 = 9;
 
 
 
@@ -149,7 +161,7 @@ bool
 
 
 unsigned short int
-  BackLightSleepMode = 0,
+  BackLightSleepMode = NEVER,
   ChargingMode = DEEP_CHARGING,
   ControllerMode = MANU,
   TempControllerMode = MANU,
