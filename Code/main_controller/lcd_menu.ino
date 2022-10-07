@@ -255,7 +255,7 @@ void battery_calib_config() {
     lcd.setCursor(1, 3), lcd.print("SAVE");
     lcd.setCursor(13, 3), lcd.print("SHOW");
     if (select_opt()) {
-      delay(2 * BouncingTime);
+      delay(6 * BouncingTime);
       while (!select_opt()) {
         CurrentTime = millis();
         switch (slider(SLIDER_Y)) {
@@ -275,12 +275,16 @@ void battery_calib_config() {
           }
         }
       }
-    } else if (slider(SLIDER_Y) == -1) {
-      TempBatteryCalib = 2;
-      delay(BouncingTime);
-    } else if (slider(SLIDER_Y) == 1) {
-      TempBatteryCalib = 0;
-      delay(BouncingTime);
+    }
+    switch (slider(SLIDER_Y)) {
+      case 1:
+        TempBatteryCalib = 0;
+        delay(BouncingTime);
+        break;
+      case -1:
+        TempBatteryCalib = 2;
+        delay(BouncingTime);
+        break;
     }
   }
 
@@ -305,13 +309,23 @@ void battery_calib_config() {
         lcd.print("         ");
       }
     }
-    if (select_opt() && add_vol_per(TempBatteryVoltage, TempBatteryLevel)) saved_config(0);
-    else if (slider(SLIDER_Y) == 1) {
-      TempBatteryCalib = 1;
-      delay(BouncingTime);
-    } else if (slider(SLIDER_Y) == -1) {
-      TempBatteryCalib = 3;
-      delay(BouncingTime);
+    if (select_opt()) {
+      delay(3 * BouncingTime);
+      if (select_opt()) {
+        if (add_vol_per(TempBatteryVoltage, TempBatteryLevel))
+          saved_config(0);
+        reset_temp_battery();
+      }
+    }
+    switch (slider(SLIDER_Y)) {
+      case 1:
+        TempBatteryCalib = 1;
+        delay(BouncingTime);
+        break;
+      case -1:
+        TempBatteryCalib = 3;
+        delay(BouncingTime);
+        break;
     }
     lcd.setCursor(13, 3), lcd.print("SHOW");
   }

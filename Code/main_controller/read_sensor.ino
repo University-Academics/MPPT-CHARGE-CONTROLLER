@@ -14,7 +14,6 @@ short int slider(short int dirc) {
 bool select_opt() {
   bool result = false;
   if (abs(CurrentTime - ButtonPreStart_sel) > BouncingTime) {
-    Serial.println(result);
     result = digitalRead(SELECT) ? false : true;
     ButtonPreStart_sel = CurrentTime;
   }

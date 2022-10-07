@@ -9,10 +9,10 @@
 #define BUCK_IN 4
 #define BUCK_EN 5
 #define BRIGHTNESS_CONTROLLER 33
-#define CURRENT_IN
-#define CURRENT_OUT
-#define VOLTAGE_IN
-#define VOLTAGE_OUTq
+#define CURRENT_IN 34
+#define CURRENT_OUT 35
+#define VOLTAGE_IN 36
+#define VOLTAGE_OUT 37
 
 const int BAUD_RATE = 115200;
 
@@ -45,6 +45,7 @@ const unsigned short int
 
   // PWM PARAMETERS
   LED_CHANNEL_BRIG = 0,
+  BUCK_PWM_CHANNEL = 2,
   FREQ1 = 39000,
   RESOLU1 = 12,
 
@@ -142,7 +143,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 bool
   enableLCD = true,
   OutputMode = true,
-  BlinkState = false;
+  BlinkState = false,
+  BuckEnable = false,
+  Error = false;
 
 
 unsigned short int
@@ -156,17 +159,26 @@ unsigned short int
   TempBatteryLevel = 0,
   BrightnessLevel = 30,
   TempBatteryCalib = 0,  // 0: Voltage Calibration, 1: percentage Calibration, 3 : Save Values 4 : Show Values
-  calibParamCount = 0;
+  calibParamCount = 3,
+  ErrorCount = 0,
+  PwmMax = 95,
+  PwmMin = 5,
+  PPWM = 50,
+  PWM = 0;
+
+
 
 float
   TempBatteryVoltage = 12,
   BatteryVoltage = 0,
-  InputVoltage = 15.0000,
+  InputVoltage = 12.0000,
+  PreInputVoltage = 12.4000,
   BatteryMaxVoltage = 15.000,
   BatteryMinVoltage = 10.0000,
   InputCurrent = 0.0000,
   OutputCurrent = 0.0000,
   InputPower = 0.000,
+  PreInputPower = 0.000,
   Wh = 0.0000,
   kWh = 0.0000,
   MWh = 0.0000;
@@ -177,7 +189,7 @@ unsigned long
   BlinkStartTime = 0.0000,
   ButtonPreStart[2] = { 0.0000, 0.0000 },
   ButtonPreStart_sel = 0.0000,
-  BouncingTime = 300,
+  BouncingTime = 200,
   BlinkTime = 600,
   FreezeTime = 2000,
   CurrentTime = 0.0000;
@@ -193,6 +205,8 @@ void setup() {
   // configure LED PWM functionalitites
   ledcSetup(LED_CHANNEL_BRIG, FREQ2, RESOLU2);
   ledcAttachPin(BRIGHTNESS_CONTROLLER, LED_CHANNEL_BRIG);
+  ledcSetup(BUCK_PWM_CHANNEL, FREQ1, RESOLU1);
+  ledcAttachPin(BUCK_IN, BUCK_PWM_CHANNEL);
 
   // PIN INTIALIZATIONS
   pinMode(CHANGE, INPUT);
@@ -226,11 +240,13 @@ void setup() {
   // saved_config(1);
   Serial.begin(BAUD_RATE);
   Serial.println("> Serial Initialized ... ");
+  BatteryVoltage = 13.5;
+  find_battery_level();
+  Serial.println(BatteryLevel);
 }
 
 
 void loop() {
-  CurrentTime = millis();
-  lcd_menu();
-  Serial.println(slider(SLIDER_Y));
+  // CurrentTime = millis();
+  // lcd_menu();
 }
