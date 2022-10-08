@@ -2,7 +2,7 @@ short int slider(short int dirc) {
   unsigned int reading = 0;
   reading = (dirc) ? analogRead(CHANGE) : analogRead(SLIDE);
   short int result = 0;
-  if (abs(CurrentTime - ButtonPreStart[dirc]) > BouncingTime) {
+  if (abs((int)(CurrentTime - ButtonPreStart[dirc])) > BouncingTime) {
     if (reading < 1000) result = -1;
     else if (reading > 3000) result = 1;
     else result = 0;
@@ -13,7 +13,7 @@ short int slider(short int dirc) {
 
 bool select_opt() {
   bool result = false;
-  if (abs(CurrentTime - ButtonPreStart_sel) > BouncingTime) {
+  if (abs((int)(CurrentTime - ButtonPreStart_sel)) > BouncingTime) {
     result = digitalRead(SELECT) ? false : true;
     ButtonPreStart_sel = CurrentTime;
   }
@@ -49,6 +49,10 @@ void complete_measurements() {
     InputPower = InputCurrent * InputVoltage;
     Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent);
     Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n\n");
+    
+    // char BatteryVoltageString[8];
+    // dtostrf(BatteryVoltage, 4, 2, BatteryVoltageString);
+    // client.publish("mppt/battery_voltage", BatteryVoltageString);    
   }
   return;
 }

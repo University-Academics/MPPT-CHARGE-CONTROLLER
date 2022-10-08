@@ -64,6 +64,10 @@ const unsigned short int
   WEEK_1 = 8,
   MONTH_1 = 9;
 
+const char
+  *ssid = "DT4G", //change here to nearby wifi ssid
+  *password = "iuytrewq", //wifi password
+  *mqtt_server = "13.76.34.183";
 
 
 //////////////////////////////// CHARACTER DEFINITION //////////////////////////////////////////
@@ -142,11 +146,15 @@ byte Skull[8] = {
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 
 
 //////////////////////////////// DEVICE INTIALIZATIONS /////////////////////////////////////////
 LiquidCrystal_I2C lcd(0x27, 20, 4);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 
 
@@ -268,12 +276,18 @@ void setup() {
   Serial.print("Serial Monitor Intialized.... !");
   buck_enable();
   ChargingMode = DEEP_CHARGING;
+  initWiFi();  
+  client.setServer(mqtt_server, 1883);
 }
 
 
 void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
   MPPT_CONTROLLER_ALGO();
   CurrentTime = millis();
   // lcd_menu();
   complete_measurements();
+  
 }

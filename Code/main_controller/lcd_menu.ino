@@ -84,7 +84,7 @@ void brightness_adj_config() {
   }
   set_brightness(BrightnessLevel);
   lcd.setCursor(1, 1), lcd.print("BRIGHTNESS LEVEL :");
-  if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+  if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
     BlinkStartTime = CurrentTime;
     lcd.setCursor(5, 2);
     if (BlinkState) {
@@ -151,7 +151,7 @@ void device_mode_config() {
 
   if (TempControllerMode == AUTO) {
     lcd.setCursor(1, 2), lcd.print("1. MANUAL");
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       BlinkStartTime = CurrentTime;
       if (BlinkState) {
         BlinkState = false;
@@ -163,7 +163,7 @@ void device_mode_config() {
     }
   } else {
     lcd.setCursor(1, 3), lcd.print("2. AUTOMATIC");
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       BlinkStartTime = CurrentTime;
       if (BlinkState) {
         BlinkState = false;
@@ -190,7 +190,7 @@ void battery_calib_config() {
   lcd.setCursor(1, 2), lcd.print("PERCENTAGE: ");
   // VOLTAGE CALIBRATION
   if (TempBatteryCalib == 0) {
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       lcd.setCursor(13, 1);
       BlinkStartTime = CurrentTime;
       if (BlinkState) {
@@ -215,7 +215,7 @@ void battery_calib_config() {
           case 1: TempBatteryVoltage = constrain(TempBatteryVoltage + 0.01, BatteryMinVoltage, BatteryMaxVoltage); break;
           case -1: TempBatteryVoltage = constrain(TempBatteryVoltage - 0.01, BatteryMinVoltage, BatteryMaxVoltage); break;
         }
-        if (abs(CurrentTime - BlinkStartTime) > .6 * BlinkTime) {
+        if (abs((int)(CurrentTime - BlinkStartTime)) > .6 * BlinkTime) {
           lcd.setCursor(13, 1);
           BlinkStartTime = CurrentTime;
           if (BlinkState) {
@@ -240,7 +240,7 @@ void battery_calib_config() {
     lcd.setCursor(13, 1);
     (TempBatteryVoltage < 10) ? lcd.print(" "), lcd.print(TempBatteryVoltage, 2) : lcd.print(TempBatteryVoltage);
     lcd.print("V");
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       lcd.setCursor(13, 2);
       BlinkStartTime = CurrentTime;
       if (BlinkState) {
@@ -262,7 +262,7 @@ void battery_calib_config() {
           case 1: TempBatteryLevel = constrain(TempBatteryLevel + 1, 0, 100); break;
           case -1: TempBatteryLevel = constrain(TempBatteryLevel - 1, 0, 100); break;
         }
-        if (abs(CurrentTime - BlinkStartTime) > .6 * BlinkTime) {
+        if (abs((int)(CurrentTime - BlinkStartTime)) > .6 * BlinkTime) {
           lcd.setCursor(13, 2);
           BlinkStartTime = CurrentTime;
           if (BlinkState) {
@@ -298,7 +298,7 @@ void battery_calib_config() {
     (TempBatteryLevel < 10) ? lcd.print("  "), lcd.print(TempBatteryLevel) : ((TempBatteryLevel == 100) ? lcd.print(TempBatteryLevel) : lcd.print(" "), lcd.print(TempBatteryLevel));
     lcd.print("%");
 
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       BlinkStartTime = CurrentTime;
       lcd.setCursor(1, 3);
       if (BlinkState) {
@@ -341,7 +341,7 @@ void battery_calib_config() {
     lcd.print("%");
     lcd.setCursor(1, 3), lcd.print("SAVE");
 
-    if (abs(CurrentTime - BlinkStartTime) > BlinkTime) {
+    if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
       BlinkStartTime = CurrentTime;
       lcd.setCursor(13, 3);
       if (BlinkState) {
