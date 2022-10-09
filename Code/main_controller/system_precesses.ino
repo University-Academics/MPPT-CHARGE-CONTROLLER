@@ -34,27 +34,27 @@ int decimal_extractor(float value) {
 
 
 // ON THE EVENT OF FACTORY RESET
-void factor_reset() {
+void factory_reset() {
   EEPROM.write(0, AUTO);
 
   EEPROM.write(1, (int8_t)-1);
   EEPROM.write(2, decimal_extractor(-1));
   EEPROM.write(3, (int8_t)-1);
-  EEPROM.write(4,  (int8_t)-1);
+  EEPROM.write(4, (int8_t)-1);
   EEPROM.write(5, decimal_extractor(-1));
-  EEPROM.write(6,  (int8_t)-1);
-  EEPROM.write(7,  (int8_t)-1);
+  EEPROM.write(6, (int8_t)-1);
+  EEPROM.write(7, (int8_t)-1);
   EEPROM.write(8, decimal_extractor(-1));
-  EEPROM.write(9,  (int8_t)-1);
-  EEPROM.write(10,  (int8_t)-1);
+  EEPROM.write(9, (int8_t)-1);
+  EEPROM.write(10, (int8_t)-1);
   EEPROM.write(11, decimal_extractor(-1));
-  EEPROM.write(12,  (int8_t)-1);
-  EEPROM.write(13,  (int8_t)-1);
+  EEPROM.write(12, (int8_t)-1);
+  EEPROM.write(13, (int8_t)-1);
   EEPROM.write(14, decimal_extractor(-1));
-  EEPROM.write(15,  (int8_t)-1);
-  EEPROM.write(16,  (int8_t)-1);
+  EEPROM.write(15, (int8_t)-1);
+  EEPROM.write(16, (int8_t)-1);
   EEPROM.write(17, decimal_extractor(-1));
-  EEPROM.write(18,  (int8_t)-1);
+  EEPROM.write(18, (int8_t)-1);
 
   EEPROM.write(19, 0);
   EEPROM.write(20, NEVER);
@@ -118,4 +118,13 @@ void save_settings() {
   EEPROM.write(19, calibParamCount);
   EEPROM.write(20, BackLightSleepMode);
   EEPROM.write(21, BrightnessLevel);
+}
+
+// PERFORM PERIODIC BACKUP
+void BACKUP_PARAMETERS() {
+  if (abs((int)(CurrentTime - PrevBackupTime)) > BackupInterval) {
+    save_settings();
+    PrevBackupTime = CurrentTime;
+  }
+  return;
 }

@@ -1,8 +1,20 @@
-void wake_back_light() {
-  lcd.setBacklight(HIGH);
-  PrevLcdBackMillis = millis();
+void LCD_init() {
+  //LCD INITIALIZATION
+  if (EnableLCD == 1) {
+    lcd.init();
+    lcd.setBacklight(HIGH);
+    set_brightness(BrightnessLevel);
+    lcd.setCursor(0, 1);
+    lcd.print("MPPT INITIALIZED");
+    lcd.setCursor(0, 2);
+    lcd.print("Version : 1.0 ");
+    delay(1500);
+    lcd.clear();
+  }
+  return;
 }
 
+// DEALING WITH BACK TIME THE BACK LIGHT IS KEPT ON
 void lcd_back_light() {
   unsigned long backLightInterval = 10000;
 
@@ -39,14 +51,18 @@ void lcd_back_light() {
       break;
   }
 
-  CurLcdBackMillis = millis();
-  if (CurLcdBackMillis - PrevLcdBackMillis >= backLightInterval) {
-    PrevLcdBackMillis = CurLcdBackMillis;  //Store previous time
+  if (CurrentTime - PrevLcdBackMillis >= backLightInterval) {
+    PrevLcdBackMillis = CurrentTime;  //Store previous time
     lcd.setBacklight(LOW);
+  }
+  if (wake_opt()) {
+    lcd.setBacklight(HIGH);
+    PrevLcdBackMillis = CurrentTime;
   }
 }
 
-void saved_config(short int STATE) {
+// SUCESS/ UNSUCESSFUL MESSAGE ON SAVING STATES
+bool saved_config(short int STATE) {
   switch (STATE) {
     case 0:
       lcd.clear();
@@ -57,47 +73,28 @@ void saved_config(short int STATE) {
       break;
     case 1:
       lcd.clear();
-      lcd.setCursor(2, 1), lcd.print("WANT TO PROCEED");
-      lcd.setCursor(2, 2), lcd.print("WITHOUT SAVING?");
+      lcd.setCursor(2, 0), lcd.print("WANT TO PROCEED");
+      lcd.setCursor(2, 1), lcd.print("WITHOUT SAVING?");
       while (true) {
         CurrentTime = millis();
-        lcd.setCursor(1, 3), lcd.print("YES");
-        lcd.setCursor(15, 3), lcd.print("NO");
-        break;
+        lcd.setCursor(1, 2), lcd.print("YES : PRESS SELECT");
+        if (select_opt()) return true;
+        lcd.setCursor(1, 3), lcd.print("NO : PRESS WAKE");
+        if (wake_opt()) return false;
       }
       lcd.clear();
-      break;
     case 2:
+      lcd.clear();
+      lcd.setCursor(3, 1), lcd.print("SYSTEM RESET");
+      lcd.setCursor(5, 2), lcd.print("SUCESSFUL");
+      delay(FreezeTime);
+      lcd.clear();
       break;
   }
+  return true;
 }
 
-void set_brightness(short int brightValue) {
-  ledcWrite(LED_CHANNEL_BRIG, (int)(BrightnessLevel * 255 / 100));
-  return;
-}
-
-void brightness_adj_config() {
-  switch (slider(SLIDER_Y)) {
-    case (-1): BrightnessLevel = constrain(BrightnessLevel - 5, 0, 100); break;
-    case (1): BrightnessLevel = constrain(BrightnessLevel + 5, 0, 100); break;
-  }
-  set_brightness(BrightnessLevel);
-  lcd.setCursor(1, 1), lcd.print("BRIGHTNESS LEVEL :");
-  if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
-    BlinkStartTime = CurrentTime;
-    lcd.setCursor(5, 2);
-    if (BlinkState) {
-      BlinkState = false;
-      (BrightnessLevel < 10) ? lcd.print("  "), lcd.print(BrightnessLevel) : ((BrightnessLevel == 0) ? lcd.print(BrightnessLevel) : lcd.print(" "), lcd.print(BrightnessLevel));
-      lcd.print("%");
-    } else {
-      BlinkState = true;
-      lcd.print("                ");
-    }
-  }
-}
-
+// DISPLAY CONFIGURATION
 void main_display_config() {
   // LINE : 1
   lcd.setCursor(1, 0);
@@ -140,6 +137,35 @@ void main_display_config() {
   return;
 }
 
+// SETTING SCREEN BRIGHTNESS
+void set_brightness(short int brightValue) {
+  ledcWrite(LED_CHANNEL_BRIG, (int)(BrightnessLevel * 255 / 100));
+  return;
+}
+
+// ADJUSTMENT FUNCTION FOR ADJUSTING SCREEN BRIGHTNESS
+void brig_adj_config() {
+  switch (slider(SLIDER_Y)) {
+    case (-1): BrightnessLevel = constrain(BrightnessLevel - 5, 0, 100); break;
+    case (1): BrightnessLevel = constrain(BrightnessLevel + 5, 0, 100); break;
+  }
+  set_brightness(BrightnessLevel);
+  lcd.setCursor(1, 1), lcd.print("BRIGHTNESS LEVEL :");
+  if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
+    BlinkStartTime = CurrentTime;
+    lcd.setCursor(5, 2);
+    if (BlinkState) {
+      BlinkState = false;
+      (BrightnessLevel < 10) ? lcd.print("  "), lcd.print(BrightnessLevel) : ((BrightnessLevel == 0) ? lcd.print(BrightnessLevel) : lcd.print(" "), lcd.print(BrightnessLevel));
+      lcd.print("%");
+    } else {
+      BlinkState = true;
+      lcd.print("                ");
+    }
+  }
+}
+
+// ADJUSTING DEVICE MODE
 void device_mode_config() {
   const short int nMax = 1, nMin = 0;
   lcd.setCursor(1, 0), lcd.print("MODE OF OPERATION");
@@ -176,7 +202,6 @@ void device_mode_config() {
   }
 
   if (select_opt()) {
-    Serial.println("WORKS");
     ControllerMode = TempControllerMode;
     saved_config(0);
   }
@@ -184,10 +209,12 @@ void device_mode_config() {
   return;
 }
 
+// ADDING DATA TO THE BATTERY CALIBRATION MATRIX
 void battery_calib_config() {
   lcd.setCursor(1, 0), lcd.print("BATTERY CALIBRATION");
   lcd.setCursor(1, 1), lcd.print("   VOLTAGE: ");
   lcd.setCursor(1, 2), lcd.print("PERCENTAGE: ");
+
   // VOLTAGE CALIBRATION
   if (TempBatteryCalib == 0) {
     if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
@@ -207,9 +234,8 @@ void battery_calib_config() {
     lcd.print("%");
     lcd.setCursor(1, 3), lcd.print("SAVE");
     lcd.setCursor(13, 3), lcd.print("SHOW");
-    if (select_opt()) {
-      delay(2 * BouncingTime);
-      while (!select_opt()) {
+    if (select_opt())
+      while (!wake_opt()) {
         CurrentTime = millis();
         switch (slider(SLIDER_Y)) {
           case 1: TempBatteryVoltage = constrain(TempBatteryVoltage + 0.01, BatteryMinVoltage, BatteryMaxVoltage); break;
@@ -228,10 +254,6 @@ void battery_calib_config() {
           }
         }
       }
-    } else if (slider(SLIDER_Y) == -1) {
-      TempBatteryCalib = 1;
-      delay(BouncingTime);
-    }
   }
 
 
@@ -254,9 +276,8 @@ void battery_calib_config() {
     }
     lcd.setCursor(1, 3), lcd.print("SAVE");
     lcd.setCursor(13, 3), lcd.print("SHOW");
-    if (select_opt()) {
-      delay(6 * BouncingTime);
-      while (!select_opt()) {
+    if (select_opt())
+      while (!wake_opt()) {
         CurrentTime = millis();
         switch (slider(SLIDER_Y)) {
           case 1: TempBatteryLevel = constrain(TempBatteryLevel + 1, 0, 100); break;
@@ -275,17 +296,6 @@ void battery_calib_config() {
           }
         }
       }
-    }
-    switch (slider(SLIDER_Y)) {
-      case 1:
-        TempBatteryCalib = 0;
-        delay(BouncingTime);
-        break;
-      case -1:
-        TempBatteryCalib = 2;
-        delay(BouncingTime);
-        break;
-    }
   }
 
 
@@ -310,22 +320,12 @@ void battery_calib_config() {
       }
     }
     if (select_opt()) {
-      delay(3 * BouncingTime);
+      delay(1.5 * BouncingTimeButt);
       if (select_opt()) {
         if (add_vol_per(TempBatteryVoltage, TempBatteryLevel))
           saved_config(0);
         reset_temp_battery();
       }
-    }
-    switch (slider(SLIDER_Y)) {
-      case 1:
-        TempBatteryCalib = 1;
-        delay(BouncingTime);
-        break;
-      case -1:
-        TempBatteryCalib = 3;
-        delay(BouncingTime);
-        break;
     }
     lcd.setCursor(13, 3), lcd.print("SHOW");
   }
@@ -353,20 +353,152 @@ void battery_calib_config() {
       }
     }
     if (select_opt()) {
-      delay(2 * BouncingTime);
       show_battery_character();
-    } else if (slider(SLIDER_Y) == 1) {
-      TempBatteryCalib = 2;
-      delay(BouncingTime);
+    }
+  }
+
+  // switching between options
+  switch (slider(SLIDER_Y)) {
+    case 1:
+      TempBatteryCalib = constrain(TempBatteryCalib - 1, 0, 3);
+      lcd.clear();
+      break;
+    case -1:
+      TempBatteryCalib = constrain(TempBatteryCalib + 1, 0, 3);
+      lcd.clear();
+      break;
+  }
+  return;
+}
+
+// ADJUSTING SLEEP TIME MODE
+void sleep_time_config() {
+  lcd.setCursor(1, 1), lcd.print("SELECT SLEEP MODE :");
+  TempSleepMode = constrain(TempSleepMode, NEVER, MONTH_1);
+  if (abs((int)(CurrentTime - BlinkStartTime)) > BlinkTime) {
+    lcd.setCursor(2, 2);
+    BlinkStartTime = CurrentTime;
+    if (BlinkState) {
+      switch (TempSleepMode) {
+        case NEVER: lcd.print("NEVER"); break;
+        case SEC_10: lcd.print("10 SECONDS"); break;
+        case MIN_5: lcd.print("5 MINUTES"); break;
+        case HOUR_1: lcd.print("1 HOUR"); break;
+        case HOUR_6: lcd.print("6 HOURS"); break;
+        case HOUR_12: lcd.print("12 HOURS"); break;
+        case DAY_1: lcd.print("1 DAY"); break;
+        case DAY_3: lcd.print("3 DAYS"); break;
+        case WEEK_1: lcd.print("1 WEEK"); break;
+        case MONTH_1: lcd.print("1 MONTH"); break;
+      }
+      BlinkState = false;
+    } else {
+      BlinkState = true;
+      lcd.print("                 ");
+    }
+    if (select_opt()) {
+      saved_config(0);
+      BackLightSleepMode = TempSleepMode;
+    }
+    switch (slider(SLIDER_Y)) {
+      case 1: TempSleepMode--; break;
+      case -1: TempSleepMode++; break;
+    }
+  }
+
+  return;
+}
+
+// FACTORY RESETTING
+void factory_reset_config() {
+  lcd.setCursor(1, 0), lcd.print("RESET THE DEVICE");
+  lcd.setCursor(1, 2), lcd.print("PRESS SELECT IF YOU");
+  lcd.setCursor(3, 3), lcd.print("TO PROCEED ?");
+  if (select_opt()) {
+    delay(5 * BouncingTimeButt);
+    if (select_opt()) {
+      saved_config(2);
+      factory_reset();
     }
   }
   return;
 }
 
+// RETURNING TO THE MAIN DISPLAY
+void return_config() {
+  lcd.setCursor(1, 1), lcd.print("EXIT MENU");
+  lcd.setCursor(1, 2), lcd.print("PRESS SELECT IF YOU");
+  lcd.setCursor(3, 3), lcd.print("WANT TO PROCEED ?");
+  if (select_opt()) {
+    MenuMode = false;
+  }
+  return;
+}
 
+// DEALING WITH SWITCHING BETWEEN SUBMENUS
+void change_submenu() {
+  short int subMenuMax = RETURN;
+  if (slider(SLIDER_X)) {
+    delay(1.2 * BouncingTime);
+    switch (slider(SLIDER_X)) {
+      case 1:
+        if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;  // DEALING WITH THE CASE OF SAVING WITHOUT PROCEED INCASE OF BATTERY CALIBRATION
+        SubMenu = constrain(SubMenu - 1, 0, subMenuMax);
+        break;
+      case -1:
+        if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;
+        SubMenu = constrain(SubMenu + 1, 0, subMenuMax);
+        break;
+    }
+  }
+  return;
+}
 
+// MAIN FUNCTION ON LCD DISPLAY
+void LCD_MENU() {
+  lcd_back_light();
 
-void lcd_menu() {
-  battery_calib_config();
+  // Default Configuration
+  if (!MenuMode) {
+    // long press for entering menu
+    if (select_opt()) {
+      delay(1.5 * BouncingTimeButt);
+      if (select_opt()) {
+        MenuMode = true;
+        return;
+      }
+    }
+    // updating display periodically
+    if (abs((int)(CurrentTime - PrevDispUpdateTime)) > DispUpdateInterval) {
+      lcd.clear();
+      main_display_config();
+      PrevDispUpdateTime = CurrentTime;
+    }
+    return;
+  }
+
+  // Entering Menu Mode
+  switch (SubMenu) {
+    case BRIG_ADJ:
+      brig_adj_config();
+      break;
+    case DEVICE_MODE:
+      device_mode_config();
+      break;
+    case BATTERY_CALIB:
+      battery_calib_config();
+      break;
+    case SLEEP_TIME:
+      sleep_time_config();
+      break;
+    case FACTORY_RESET:
+      factory_reset_config();
+    case RETURN:
+      return_config();
+      break;
+  }
+
+  change_submenu();
+
   return;
 }
