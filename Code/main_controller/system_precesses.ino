@@ -59,6 +59,10 @@ void factory_reset() {
   EEPROM.write(19, 0);
   EEPROM.write(20, NEVER);
   EEPROM.write(21, 40);
+
+  // INTIALIZING PARAMETERS AS REQUIRED
+  load_settings();
+  Wh = 0;
 }
 
 

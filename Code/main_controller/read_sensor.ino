@@ -88,7 +88,7 @@ void COMPLETE_MEASUREMENTS() {
 
   // TIME UPDATA
   CurrentTime = millis();
-    
+
   // PERIODIC PARAMETER UPDATE
   if (CurrentTime - RoutineStartTime > RoutineMidInterval) {
     for (int i = 0; i < avgCount; i++) {
@@ -118,7 +118,12 @@ void COMPLETE_MEASUREMENTS() {
     InputPower = InputCurrent * InputVoltage;
     OutputPower = OutputCurrent * BatteryVoltage;
     Efficiency = (InputPower != 0) ? OutputPower * 100 / InputPower : 0;
-    
+
+    // Energy Calculation
+    Wh += OutputPower * RoutineMidInterval / 3600000;
+    kWh = Wh / 1000;
+    MWh = Wh / 1000000;
+
     // Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent);
     // Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n\n");
 
