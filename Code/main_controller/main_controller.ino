@@ -5,15 +5,17 @@
 #define SLIDE 32   // Change between Menu Options
 #define CHANGE 35  // Change the Value
 #define SELECT 18
-#define WAKE_BACK_LIGHT 12
+#define WAKE_BACK_LIGHT 5
 #define INDICATOR_LED 2
 #define BUCK_IN 13
 #define BUCK_EN 14
-#define BRIGHTNESS_CONTROLLER 33
+#define BRIGHTNESS_CONTROLLER 15
 #define CURRENT_IN 33
 #define CURRENT_OUT 34
 #define VOLTAGE_IN 39
 #define VOLTAGE_OUT 36
+// 21 : SDA  and 22 : SCL
+
 
 const int BAUD_RATE = 115200;
 
@@ -46,7 +48,7 @@ const unsigned short int
   SLIDER_Y = 1,
 
   // PWM PARAMETERS
-  LED_CHANNEL_BRIG = 2,
+  LED_CHANNEL_BRIG = 1,
   BUCK_PWM_CHANNEL = 0,
   FREQ1 = 37000,
   RESOLU1 = 8,
@@ -75,12 +77,12 @@ const char
 //////////////////////////////// CHARACTER DEFINITION //////////////////////////////////////////
 
 byte NoBattery[8] = {
-  0b00000,
   0b01111,
   0b01001,
   0b00011,
   0b00100,
   0b00100,
+  0b00000,
   0b00000,
   0b00100
 };
@@ -173,20 +175,20 @@ bool
 unsigned short int
   BackLightSleepMode = NEVER,
   TempSleepMode = NEVER,
-  ChargingMode = DEEP_CHARGING,
-  ControllerMode = MANU,
-  TempControllerMode = MANU,
+  ChargingMode = IDLE,
+  ControllerMode = AUTO,
+  TempControllerMode = AUTO,
   SubMenu = BRIG_ADJ,
   Efficiency = 0,
   BatteryLevel = 0,
   TempBatteryLevel = 0,
-  BrightnessLevel = 30,
+  BrightnessLevel = 40,
   TempBatteryCalib = 0,  // 0: Voltage Calibration, 1: percentage Calibration, 3 : Save Values 4 : Show Values
-  calibParamCount = 3,
+  calibParamCount = 2,
   ErrorCount = 0,
   PPwmMax = 95,
-  PPwmMin = 20,
-  PPWM = 40,
+  PPwmMin = 10,
+  PPWM = 20,
   PWM = 0;
 
 
@@ -211,8 +213,8 @@ float
   MWh = 0.0000,
   CinOffsetVoltage = 2.5102,
   CoutOffsetVoltage = 2.5058,
-  CinSensitivity = 0.03000,
-  CoutSensitivity = 0.0300,
+  CinSensitivity = 0.158,
+  CoutSensitivity = 0.178,
   VinGain = 15.609321,
   VinGainList[] = { 15.609321, 15.609321, 15.609321, 15.609321 },  //  0 : 25V , 1 : 28V, 2 : 32V, 3: 36V
   VoutGain = 17.8592297,
@@ -234,13 +236,15 @@ unsigned long
   BlinkTime = 600,
   FreezeTime = 2000,
   CurrentTime = 0.0000,
+  DetectedTime = 0.0000,
+  DetectionInterval = 8000,
   RoutineStartTime = 0.0000,
   RoutineMidInterval = 200,
-  DispUpdateInterval = 1000,
+  DispUpdateInterval = 2000,
   WifiReconnectionInterval = 5000,
   BackupInterval = 60000;  // ONE MINUTES IDEAL
 
-float BatteryLevelMatrix[6][2] = { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } };
+float BatteryLevelMatrix[6][2] = { { 12.8, 100 }, { 10.2, 0 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } };
 
 
 
@@ -250,10 +254,11 @@ void setup() {
   Serial.print("Serial Monitor Intialized.... !");
 
   PARAM_init();
-  WIFI_init();
   LCD_init();
-  client.setServer(mqtt_server, 1883);
-  load_settings();  //NEED TO RUN SAVE SETTINGS ON THE OVERALL FIRST RUN TO SAVE PARAMETERS INTO FLASH
+  // WIFI_init();
+  ALGO_init();
+  // client.setServer(mqtt_server, 1883);
+  // load_settings();  //NEED TO RUN SAVE SETTINGS ON THE OVERALL FIRST RUN TO SAVE PARAMETERS INTO FLASH
 }
 
 
@@ -261,6 +266,6 @@ void loop() {
   COMPLETE_MEASUREMENTS();
   LCD_MENU();
   MPPT_CONTROLLER_ALGO();
-  UPDATE_CONNECTED_DEVICE();
+  // UPDATE_CONNECTED_DEVICE();
   BACKUP_PARAMETERS();
 }

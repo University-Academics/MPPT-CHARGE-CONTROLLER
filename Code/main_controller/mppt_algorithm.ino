@@ -1,3 +1,12 @@
+void ALGO_init() {
+  battery_calib_limits();
+  buck_disable();
+  COMPLETE_MEASUREMENTS();
+  detect_mode();
+  return;
+}
+
+
 void buck_enable() {  //Enable MPPT Buck Converter
   BuckEnable = 1;
   digitalWrite(BUCK_EN, HIGH);
@@ -21,15 +30,18 @@ int pwm_avalue(int ppwm, int resolution) {
 
 
 void detect_mode() {
-  if (InputVoltage < InputThresholdVoltage) ControllerMode = IDLE;
-  else if (BatteryVoltage < BatteryThresholdVoltage) ControllerMode = NO_BATTERY;
-  else if (BatteryVoltage > BatteryMaxVoltage - Delta) ControllerMode = FLOATING;
-  else ControllerMode = DEEP_CHARGING;
+  buck_disable();
+  delay(500);
+  Serial.println(BatteryVoltage);
+  if (InputVoltage < InputThresholdVoltage) ChargingMode = IDLE;
+  else if (BatteryVoltage < BatteryThresholdVoltage) ChargingMode = NO_BATTERY;
+  else if (BatteryVoltage > BatteryMaxVoltage - Delta) ChargingMode = FLOATING;
+  else ChargingMode = DEEP_CHARGING;
   return;
 }
 
 void run_algorithm() {
-  switch (ControllerMode) {
+  switch (ChargingMode) {
     case IDLE:  // NO INPUT DETECTED STATE
       PPWM = 50;
       break;
@@ -49,12 +61,17 @@ void run_algorithm() {
       else PPWM++;
       break;
   }
+  // Serial.println(PPWM);
 
   PPWM_constrain();
   PWM = pwm_avalue(PPWM, RESOLU1);
   ledcWrite(BUCK_PWM_CHANNEL, PWM);
-  if (ControllerMode = DEEP_CHARGING || ControllerMode == FLOATING) buck_enable();
-  else buck_disable();
+  if (ChargingMode = DEEP_CHARGING || ChargingMode == FLOATING) buck_enable();
+  else {
+    buck_disable();
+    InputPower = 0.000;
+    OutputPower = 0;
+  }
   // STORING PREVIOUS VALUES
   PreInputPower = InputPower;
   PreInputVoltage = InputVoltage;
@@ -63,7 +80,10 @@ void run_algorithm() {
 }
 
 void MPPT_CONTROLLER_ALGO() {
-  detect_mode();
+  if (abs((int)CurrentTime - DetectedTime) > DetectionInterval) {
+    detect_mode();
+    DetectedTime = CurrentTime;
+  }
   if (ParamUpdateFlag) {
     run_algorithm();
     ParamUpdateFlag = false;

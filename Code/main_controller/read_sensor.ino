@@ -20,13 +20,6 @@ void PARAM_init() {
   pinMode(BUCK_EN, OUTPUT);
 
 
-  // Intiating characters
-  lcd.createChar(0, NoBattery);
-  lcd.createChar(1, Charging);
-  lcd.createChar(2, Charged);
-  lcd.createChar(3, IdLe);
-  lcd.createChar(4, Check);
-  lcd.createChar(5, Skull);
 
   return;
 }
@@ -104,8 +97,8 @@ void COMPLETE_MEASUREMENTS() {
     avgCountVout = (float)totalCountVout / avgCount;
 
     // APPROXIMATE VALUES
-    InputCurrent = (CinOffsetVoltage - avgCountCin * 3.3 / 4096) * CinSensitivity;
-    OutputCurrent = (CoutOffsetVoltage - avgCountCout * 3.3 / 4096) * CoutSensitivity;
+    InputCurrent = (CinOffsetVoltage - avgCountCin * 3.3 / 4096) / CinSensitivity;
+    OutputCurrent = (CoutOffsetVoltage - avgCountCout * 3.3 / 4096) / CoutSensitivity;
     InputVoltage = avgCountVin * 3.3 * VinGain / 4096;
     BatteryVoltage = avgCountVout * 3.3 * VoutGain / 4096;
 
@@ -116,13 +109,19 @@ void COMPLETE_MEASUREMENTS() {
 
     // POWER AND EFFICIECY MEASUREMENT
     InputPower = InputCurrent * InputVoltage;
+    InputPower = (InputPower < 5) ? 0 : InputPower;
     OutputPower = OutputCurrent * BatteryVoltage;
-    Efficiency = (InputPower != 0) ? OutputPower * 100 / InputPower : 0;
+    OutputPower = (OutputPower < 8) ? 0 : OutputPower;
+    Serial.println(OutputPower);
+    Efficiency = constrain((InputPower != 0) ? OutputPower * 100 / InputPower : 0, 0, 80);
 
     // Energy Calculation
-    Wh += OutputPower * RoutineMidInterval / 3600000;
+    Wh += constrain(OutputPower * RoutineMidInterval / 3600000, 0, 10000000);
     kWh = Wh / 1000;
     MWh = Wh / 1000000;
+
+    //Battery Level
+    find_battery_level();
 
     // Serial.print("Input Current : "), Serial.print(InputCurrent), Serial.print("    OutputCurrent: "), Serial.print(OutputCurrent);
     // Serial.print("\n Input Voltage :"), Serial.print(InputVoltage), Serial.print("   BatteryVoltage :"), Serial.print(BatteryVoltage), Serial.print("\n\n");

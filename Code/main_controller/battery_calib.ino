@@ -25,7 +25,7 @@ void find_battery_level() {
   }
 
   temVol = constrain(BatteryVoltage, BatteryMinVoltage, BatteryMaxVoltage);
-  BatteryLevel = infPer + ((float)(supPer - infPer)) * (BatteryVoltage - infVol) / (supVol - infVol);
+  BatteryLevel = constrain(infPer + ((float)(supPer - infPer)) * (BatteryVoltage - infVol) / (supVol - infVol),0,100) ;
   return;
 }
 

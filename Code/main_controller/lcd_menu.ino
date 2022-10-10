@@ -1,4 +1,6 @@
 void LCD_init() {
+
+
   //LCD INITIALIZATION
   if (EnableLCD == 1) {
     lcd.init();
@@ -11,6 +13,14 @@ void LCD_init() {
     delay(1500);
     lcd.clear();
   }
+  // Intiating characters
+  lcd.createChar(0, NoBattery);
+  lcd.createChar(1, Charging);
+  lcd.createChar(2, Charged);
+  lcd.createChar(3, IdLe);
+  lcd.createChar(4, Check);
+  lcd.createChar(5, Skull);
+
   return;
 }
 
@@ -51,7 +61,7 @@ void lcd_back_light() {
       break;
   }
 
-  if (CurrentTime - PrevLcdBackMillis >= backLightInterval) {
+  if (abs((int)(CurrentTime - PrevLcdBackMillis)) > backLightInterval) {
     PrevLcdBackMillis = CurrentTime;  //Store previous time
     lcd.setBacklight(LOW);
   }
@@ -59,6 +69,7 @@ void lcd_back_light() {
     lcd.setBacklight(HIGH);
     PrevLcdBackMillis = CurrentTime;
   }
+  return;
 }
 
 // SUCESS/ UNSUCESSFUL MESSAGE ON SAVING STATES
@@ -78,11 +89,17 @@ bool saved_config(short int STATE) {
       while (true) {
         CurrentTime = millis();
         lcd.setCursor(1, 2), lcd.print("YES : PRESS SELECT");
-        if (select_opt()) return true;
+        if (select_opt()) {
+          lcd.clear();
+          return true;
+        }
         lcd.setCursor(1, 3), lcd.print("NO : PRESS WAKE");
-        if (wake_opt()) return false;
+        if (wake_opt()) {
+          lcd.clear();
+          return false;
+        }
       }
-      lcd.clear();
+
     case 2:
       lcd.clear();
       lcd.setCursor(3, 1), lcd.print("SYSTEM RESET");
@@ -91,6 +108,7 @@ bool saved_config(short int STATE) {
       lcd.clear();
       break;
   }
+  lcd.clear();
   return true;
 }
 
@@ -113,7 +131,7 @@ void main_display_config() {
   lcd.print("BAT LEVEL: ");
   if (calibParamCount < 2) lcd.print("ERROR");
   else {
-    (BatteryLevel < 10) ? lcd.print("  "), lcd.print(BatteryLevel) : ((BatteryLevel == 100) ? lcd.print(BatteryLevel) : lcd.print(" "), lcd.print(BatteryLevel));
+    (BatteryLevel < 10) ? lcd.print("  "), lcd.print(BatteryLevel) : ((BatteryLevel == 100) ? BatteryLevel-- : lcd.print(" "), lcd.print(BatteryLevel));
     lcd.print("%");
   }
 
@@ -412,14 +430,11 @@ void sleep_time_config() {
 // FACTORY RESETTING
 void factory_reset_config() {
   lcd.setCursor(1, 0), lcd.print("RESET THE DEVICE");
-  lcd.setCursor(1, 2), lcd.print("PRESS SELECT IF YOU");
+  lcd.setCursor(1, 2), lcd.print("PRESS WAKE IF YOU");
   lcd.setCursor(3, 3), lcd.print("TO PROCEED ?");
-  if (select_opt()) {
-    delay(5 * BouncingTimeButt);
-    if (select_opt()) {
-      saved_config(2);
-      factory_reset();
-    }
+  if (wake_opt()) {
+    saved_config(2);
+    factory_reset();
   }
   return;
 }
@@ -430,6 +445,7 @@ void return_config() {
   lcd.setCursor(1, 2), lcd.print("PRESS SELECT IF YOU");
   lcd.setCursor(3, 3), lcd.print("WANT TO PROCEED ?");
   if (select_opt()) {
+    lcd.clear();
     MenuMode = false;
   }
   return;
@@ -438,18 +454,17 @@ void return_config() {
 // DEALING WITH SWITCHING BETWEEN SUBMENUS
 void change_submenu() {
   short int subMenuMax = RETURN;
-  if (slider(SLIDER_X)) {
-    delay(1.2 * BouncingTime);
-    switch (slider(SLIDER_X)) {
-      case 1:
-        if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;  // DEALING WITH THE CASE OF SAVING WITHOUT PROCEED INCASE OF BATTERY CALIBRATION
-        SubMenu = constrain(SubMenu - 1, 0, subMenuMax);
-        break;
-      case -1:
-        if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;
-        SubMenu = constrain(SubMenu + 1, 0, subMenuMax);
-        break;
-    }
+  switch (slider(SLIDER_X)) {
+    case 1:
+      lcd.clear();
+      if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;  // DEALING WITH THE CASE OF SAVING WITHOUT PROCEED INCASE OF BATTERY CALIBRATION
+      SubMenu = constrain(SubMenu - 1, 0, subMenuMax);
+      break;
+    case -1:
+      lcd.clear();
+      if (SubMenu == BATTERY_CALIB && !saved_config(1) && TempBatteryVoltage != 12) break;
+      SubMenu = constrain(SubMenu + 1, 0, subMenuMax);
+      break;
   }
   return;
 }
@@ -462,11 +477,9 @@ void LCD_MENU() {
   if (!MenuMode) {
     // long press for entering menu
     if (select_opt()) {
-      delay(1.5 * BouncingTimeButt);
-      if (select_opt()) {
-        MenuMode = true;
-        return;
-      }
+      lcd.clear();
+      MenuMode = true;
+      return;
     }
     // updating display periodically
     if (abs((int)(CurrentTime - PrevDispUpdateTime)) > DispUpdateInterval) {
